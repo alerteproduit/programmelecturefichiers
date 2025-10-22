@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import List, Tuple, TYPE_CHECKING
+from typing import Iterable, List, Tuple, TYPE_CHECKING
 
 from . import config, loader, utils
 from ._compat import get_pandas
@@ -97,20 +97,42 @@ def _find_column(
     """Return a tuple of used column names and the associated Series."""
 
     pd = get_pandas()
+    candidates: list[str] = []
     for column in df.columns:
         if mapping_match(spec, column):
-            return [column], df[column]
+            candidates.append(column)
 
-    for column in df.columns:
-        matched_spec = mapping.match(column)
-        if matched_spec is spec:
-            return [column], df[column]
+    if not candidates:
+        for column in df.columns:
+            matched_spec = mapping.match(column)
+            if matched_spec is spec:
+                candidates.append(column)
+
+    if candidates:
+        column = _choose_best_column(df, candidates)
+        return [column], df[column]
 
     return [], pd.Series([pd.NA] * len(df))
+
+
+def _choose_best_column(df, candidates: Iterable[str]) -> str:
+    """Return the candidate column containing the richest dataset."""
+
+    best_column = None
+    best_score = -1
+    for column in candidates:
+        series = df[column]
+        score = int(series.notna().sum())
+        if score > best_score:
+            best_score = score
+            best_column = column
+
+    # ``candidates`` is guaranteed to be non-empty when this helper is used
+    assert best_column is not None  # pragma: no cover - defensive programming
+    return best_column
 
 
 def mapping_match(spec: config.ColumnSpec, column: str) -> bool:
     """Return ``True`` when ``column`` matches the provided ``spec``."""
 
-    canon = utils.canonicalize(column)
-    return canon in spec.canonical_synonyms()
+    return spec.matches(column)

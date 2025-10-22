@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
+from difflib import SequenceMatcher
 import unicodedata
 from typing import Iterable, TYPE_CHECKING
 
@@ -27,6 +28,16 @@ def canonicalize(value: str) -> str:
     normalized = normalized.lower()
     normalized = re.sub(r"[^a-z0-9]+", "", normalized)
     return normalized
+
+
+def fuzzy_ratio(left: str, right: str) -> float:
+    """Return a similarity score between two strings in the range [0, 100]."""
+
+    if not left or not right:
+        return 0.0
+
+    matcher = SequenceMatcher(None, left.lower(), right.lower())
+    return matcher.ratio() * 100
 
 
 def coerce_dtype(series: "pd.Series", dtype: str) -> "pd.Series":

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence
@@ -15,14 +16,36 @@ class ColumnSpec:
     """Specification of a normalized column."""
 
     name: str
-    synonyms: Sequence[str]
+    synonyms: Sequence[str] = ()
     dtype: str = "string"
+    patterns: Sequence[str] = ()
+    fuzzy_threshold: float | None = None
 
     def canonical_synonyms(self) -> List[str]:
         """Return canonicalized names for matching."""
 
         candidates: Iterable[str] = list(self.synonyms) + [self.name]
         return [utils.canonicalize(s) for s in candidates]
+
+    def matches(self, column_name: str) -> bool:
+        """Return ``True`` when the provided column should map to this spec."""
+
+        canon = utils.canonicalize(column_name)
+        if canon in self.canonical_synonyms():
+            return True
+
+        for pattern in self.patterns:
+            if re.search(pattern, column_name, flags=re.IGNORECASE):
+                return True
+
+        if self.fuzzy_threshold:
+            candidates: Iterable[str] = [self.name, *self.synonyms]
+            for candidate in candidates:
+                score = utils.fuzzy_ratio(column_name, candidate)
+                if score >= self.fuzzy_threshold:
+                    return True
+
+        return False
 
 
 class ColumnMapping:
@@ -45,7 +68,15 @@ class ColumnMapping:
         """Return the spec matching the provided raw column name."""
 
         key = utils.canonicalize(column_name)
-        return self._index.get(key)
+        spec = self._index.get(key)
+        if spec:
+            return spec
+
+        for candidate in self._columns:
+            if candidate.matches(column_name):
+                return candidate
+
+        return None
 
 
 def load_mapping(path: str | Path) -> ColumnMapping:
@@ -65,6 +96,16 @@ def load_mapping(path: str | Path) -> ColumnMapping:
             raise ValueError("Column specification missing 'name'")
         synonyms = raw_spec.get("synonyms", [])
         dtype = raw_spec.get("dtype", "string")
-        columns.append(ColumnSpec(name=name, synonyms=synonyms, dtype=dtype))
+        patterns = raw_spec.get("patterns", [])
+        fuzzy_threshold = raw_spec.get("fuzzy_threshold")
+        columns.append(
+            ColumnSpec(
+                name=name,
+                synonyms=synonyms,
+                dtype=dtype,
+                patterns=patterns,
+                fuzzy_threshold=fuzzy_threshold,
+            )
+        )
 
     return ColumnMapping(columns)

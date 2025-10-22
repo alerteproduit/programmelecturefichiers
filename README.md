@@ -16,9 +16,19 @@ du workflow sans erreur de structure.
 ## Configuration du mapping
 
 Le fichier [`config/column_mappings.yaml`](config/column_mappings.yaml) décrit
-les colonnes attendues ainsi que leurs synonymes possibles.
-Adaptez la clé `columns` à vos propres données. Chaque colonne peut également
-spécifier un `dtype` (`string`, `float`, `int`, `date`, `bool`).
+les colonnes attendues ainsi que les différentes façons de les reconnaître.
+Pour chaque entrée vous pouvez :
+
+- Déclarer autant de synonymes que nécessaire (`synonyms`).
+- Ajouter des expressions régulières (`patterns`) capables de repérer de
+  nouveaux intitulés inattendus.
+- Activer un rapprochement approximatif (`fuzzy_threshold`) pour tolérer des
+  fautes de frappe ou des variations légères (valeur entre 0 et 100).
+- Spécifier un `dtype` (`string`, `float`, `int`, `date`, `bool`).
+
+Grâce à ces options, un fichier Excel ou CSV avec des noms de colonnes encore
+jamais vus mais proches des synonymes déclarés sera rattaché automatiquement à
+la bonne colonne normalisée.
 
 ## Utilisation
 
@@ -37,6 +47,8 @@ spécifier un `dtype` (`string`, `float`, `int`, `date`, `bool`).
 
 Les colonnes connues sont normalisées (noms cohérents, types convertis) et les
 colonnes non reconnues sont conservées telles quelles en fin de fichier.
+Si plusieurs colonnes d'origine correspondent à la même colonne cible, celle
+contenant le plus de valeurs renseignées est choisie automatiquement.
 
 ## Exemple
 
