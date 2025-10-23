@@ -39,6 +39,35 @@ la bonne colonne normalisée.
    python -m normalizer.cli normalize data data/normalized --config config/column_mappings.yaml
    ```
 
+   Dans le cadre du workflow **AlerteProduit**, vous pouvez lancer directement le
+   module `scripts.lecture_universelle` afin qu'il respecte la convention de
+   dossiers utilisée par les étapes précédentes (`data/entree` ->
+   `data/normalized`) et qu'il interprète les variables d'environnement `AP_*`
+   déjà présentes dans le projet :
+
+   ```bash
+   python -m scripts.lecture_universelle --auto-learn --verbose
+   ```
+
+   Les options peuvent être surchargées via la ligne de commande ou les
+   variables suivantes :
+
+   | Variable | Effet |
+   | --- | --- |
+   | `AP_LU_INPUT_DIR` / `AP_ENTREE_DIR` | Dossier surveillé pour les fichiers bruts |
+   | `AP_LU_OUTPUT_DIR` / `AP_NORMALIZED_DIR` | Destination des fichiers normalisés |
+   | `AP_LU_CONFIG` / `AP_COLUMN_MAPPING` | Chemin du mapping de colonnes |
+   | `AP_LU_ENCODING` | Encodage forcé pour la lecture des CSV |
+   | `AP_LU_OUTPUT_FORMAT` | Format de sortie (`csv` ou `xlsx`) |
+   | `AP_LU_AUTO_LEARN` | Active/désactive l'apprentissage automatique |
+
+   Pour désactiver ponctuellement l'apprentissage automatique tout en gardant
+   la variable active, exécutez :
+
+   ```bash
+   python -m scripts.lecture_universelle --no-auto-learn
+   ```
+
    Options supplémentaires :
    - `--encoding` pour forcer un encodage particulier lors de la lecture des
      fichiers CSV (ex. `latin-1`).
