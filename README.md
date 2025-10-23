@@ -14,10 +14,13 @@ Le module `programmelecturefichiers` expose :
   la configuration détectée (`config`), soit de lancer la normalisation
   (`normalize`).
 
-Exemple :
+Pour conserver la compatibilité avec les anciens scripts, un alias `normalizer`
+a été conservé. Vous pouvez donc indifféremment utiliser :
 
 ```bash
 python -m programmelecturefichiers.cli normalize --json
+# ou
+python -m normalizer.cli normalize --json
 ```
 
 ## Workflow
