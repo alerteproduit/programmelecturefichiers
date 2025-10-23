@@ -84,7 +84,29 @@ def load_mapping(path: str | Path) -> ColumnMapping:
 
     yaml = get_yaml()
     with Path(path).open("r", encoding="utf-8") as fh:
-        data = yaml.safe_load(fh)
+        # ``safe_load`` rejects multi-document YAML streams. Some users may
+        # duplicate mappings with ``---`` separators, so we fold any additional
+        # documents into a single configuration by merging their ``columns``
+        # entries. ``safe_load_all`` gracefully handles both single and
+        # multi-document files.  When only one document exists the generator
+        # yields a single item, keeping the common path efficient.
+        documents = [doc for doc in yaml.safe_load_all(fh) if doc]
+
+    if not documents:
+        raise ValueError("Configuration file must contain a document with a 'columns' list")
+
+    if len(documents) == 1:
+        data = documents[0]
+    else:
+        data = {"columns": []}
+        for doc in documents:
+            if not isinstance(doc, dict):
+                continue
+            if "columns" in doc and isinstance(doc["columns"], list):
+                data["columns"].extend(doc["columns"])
+
+        if not data["columns"]:
+            raise ValueError("Combined configuration must contain at least one 'columns' entry")
 
     if not data or "columns" not in data:
         raise ValueError("Configuration file must contain a 'columns' list")
