@@ -17,10 +17,11 @@ def _ensure_log_dir() -> None:
 
 def log_exec(
     step: str,
-    *,
     status: str = "ok",
+    *,
     note: Optional[str] = None,
     extra: Optional[Dict[str, Any]] = None,
+    **metadata: Any,
 ) -> None:
     """Append a structured entry to ``web_flask/logs/executions.jsonl``.
 
@@ -37,8 +38,13 @@ def log_exec(
     }
     if note:
         record["note"] = note
+    payload: Dict[str, Any] = {}
     if extra:
-        record.update(extra)
+        payload.update(extra)
+    if metadata:
+        payload.update(metadata)
+    if payload:
+        record.update(payload)
 
     with _EXECUTIONS_FILE.open("a", encoding="utf-8") as fh:
         json.dump(record, fh, ensure_ascii=False)

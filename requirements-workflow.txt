@@ -1,0 +1,10 @@
+# Paquets requis pour exécuter le workflow complet avec Python 3.9
+numpy>=1.24,<2
+pandas>=1.5,<2
+sentence-transformers==2.2.2
+transformers<4.38
+torch==2.1.2
+urllib3<2
+paramiko>=3.0
+python-dotenv>=0.21
+requests>=2.31

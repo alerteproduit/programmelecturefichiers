@@ -54,3 +54,28 @@ Le lanceur `workflow_alerteproduit.command` orchestre les scripts présents dans
 `scripts/`. Ceux-ci sont exécutés via `python -m scripts.<module>` (collecte
 SFTP, dispatch, normalisation universelle, matching IA, envoi des SMS,
 archivage, apprentissage, etc.).
+
+### Pré-requis Python (macOS / Python 3.9)
+
+Les bibliothèques IA récentes ciblent Python ≥ 3.10 et NumPy 2.x. Si vous
+restez sur Python 3.9 (configuration historique du workflow), il faut figer les
+versions compatibles avant de lancer le pipeline :
+
+```bash
+pip install -r requirements-workflow.txt
+```
+
+Ce fichier impose notamment `numpy<2` (pour éviter l'erreur *"A module that was
+compiled using NumPy 1.x cannot be run in NumPy 2.0.2"*), `transformers<4.38`
+(dernier release compatible Python 3.9) et une version de `torch` cohérente.
+
+### Erreurs fréquentes et correctifs
+
+| Symptôme observé pendant le workflow | Solution recommandée |
+| --- | --- |
+| `ModuleNotFoundError: No module named 'normalizer'` à l'étape 5 | Mettre à jour le dépôt (alias `normalizer` fourni) ou lancer `python -m programmelecturefichiers.cli ...`. |
+| `ImportError: cannot import name 'NormalizationResult'` | Le paquet a été partiellement chargé. Relancer le workflow après mise à jour : les imports sont désormais paresseux et compatibles avec l'alias `normalizer`. |
+| `A module that was compiled using NumPy 1.x cannot be run in NumPy 2.0.2` | Installer les dépendances via `pip install -r requirements-workflow.txt` (pins `numpy<2`). |
+| `TypeError: unsupported operand type(s) for |: 'type' and 'NoneType'` dans `transformers` | Même correctif que ci-dessus : la version épinglée (<4.38) conserve une syntaxe compatible Python 3.9. |
+| `FileNotFoundError: .../data/entree/achats.csv introuvable` à l'étape 8 | Vérifier que des fichiers achats/clients sont présents dans `data/uploads/<enseigne>/` avant le lancement. Sans matière, les étapes 4-5 ne produisent aucun CSV. |
+| `BREVO_API_KEY manquante` à l'étape 9 | Définir la clé API Brevo dans `config/.env` ou dans l'environnement (`export BREVO_API_KEY=...`). |
