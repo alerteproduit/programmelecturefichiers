@@ -6,7 +6,14 @@
 set -uo pipefail
 
 # 0) Contexte projet
-PROJ="$HOME/Desktop/AlerteProduit/alerteproduit_intelligent"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+DEFAULT_PROJ="$HOME/Desktop/AlerteProduit/alerteproduit_intelligent"
+if [ -d "$DEFAULT_PROJ" ]; then
+  PROJ="$DEFAULT_PROJ"
+else
+  PROJ="$SCRIPT_DIR"
+  echo "ℹ️  Utilisation du dépôt courant comme racine du projet: $PROJ"
+fi
 cd "$PROJ" || { echo "❌ Projet introuvable: $PROJ"; exit 1; }
 
 # 1) Batch + logs (Étape 1)
