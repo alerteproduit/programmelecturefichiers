@@ -23,6 +23,31 @@ python -m programmelecturefichiers.cli normalize --json
 python -m normalizer.cli normalize --json
 ```
 
+### Pourquoi cette organisation ?
+
+- **Séparation claire des responsabilités** : la logique de normalisation vit
+  désormais dans un paquet dédié (`programmelecturefichiers`). Les scripts du
+  workflow se contentent d'importer et d'utiliser cette brique commune, ce qui
+  simplifie la maintenance.
+- **Compatibilité garantie** : le sous-paquet `normalizer` ré-exporte les mêmes
+  fonctions/classes. Les commandes historiques (`python -m normalizer.cli`)
+  continuent donc de fonctionner tout en profitant du nouveau moteur.
+- **Performance et résilience** : `UniversalNormalizer` essaie plusieurs
+  combinaisons de formats (CSV/Excel, encodages, séparateurs), normalise les
+  colonnes et évite de retraiter les fichiers déjà gérés par l'étape de
+  dispatch. Les sorties sont directement utilisables par les étapes IA, SMS et
+  archivage.
+
+### Comment s'articulent les modules ?
+
+1. Les scripts du workflow sont lancés via `workflow_alerteproduit.command`.
+2. L'étape 5 invoque `python -m normalizer.cli normalize ...`, qui redirige vers
+   `programmelecturefichiers.cli`.
+3. La CLI résout la configuration projet, instancie `UniversalNormalizer` et
+   écrit les fichiers normalisés dans `data/entree`.
+4. Les étapes suivantes (matching, alertes, SMS, archivage, apprentissage)
+   consomment ces sorties sans adaptation supplémentaire.
+
 ## Workflow
 
 Le lanceur `workflow_alerteproduit.command` orchestre les scripts présents dans
