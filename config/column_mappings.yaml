@@ -1,0 +1,34 @@
+# Example column mapping configuration.
+# Update the "columns" list to reflect the canonical schema you expect.
+columns:
+  - name: client_name
+    dtype: string
+    synonyms:
+      - client
+      - nom client
+      - customer
+      - customer name
+    patterns:
+      - "^nom.*client"
+  - name: order_id
+    dtype: string
+    synonyms:
+      - id commande
+      - order
+      - purchase id
+    fuzzy_threshold: 80
+  - name: order_date
+    dtype: date
+    synonyms:
+      - date
+      - date commande
+      - purchase date
+    patterns:
+      - "date.*achat"
+  - name: amount
+    dtype: float
+    synonyms:
+      - montant
+      - total
+      - price
+    fuzzy_threshold: 75
