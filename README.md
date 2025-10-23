@@ -44,6 +44,15 @@ la bonne colonne normalisée.
      fichiers CSV (ex. `latin-1`).
    - `--output-format` pour choisir le format de sortie (`csv` ou `xlsx`).
    - `--verbose` pour afficher des informations détaillées.
+   - `--auto-learn` pour enregistrer automatiquement les nouveaux intitulés de
+     colonnes reconnus dans le fichier de configuration. Lors des prochains
+     traitements, ces colonnes seront identifiées immédiatement sans passer par
+     les règles de similarité.
+
+Lorsque `--auto-learn` est activé, le programme ajoute toute en-tête détectée
+pour la première fois dans la liste des synonymes correspondante, puis
+réécrit `config/column_mappings.yaml`. Pensez à versionner ce fichier afin de
+suivre l'historique des colonnes apprises automatiquement.
 
 Les colonnes connues sont normalisées (noms cohérents, types convertis) et les
 colonnes non reconnues sont conservées telles quelles en fin de fichier.

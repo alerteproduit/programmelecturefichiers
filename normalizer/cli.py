@@ -33,6 +33,14 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["csv", "xlsx"],
         help="File format for the normalized exports (default: csv)",
     )
+    normalize_parser.add_argument(
+        "--auto-learn",
+        action="store_true",
+        help=(
+            "Store newly discovered column headers back into the mapping file "
+            "for future runs"
+        ),
+    )
 
     return parser
 
@@ -58,9 +66,17 @@ def main(argv: list[str] | None = None) -> int:
             mapping,
             encoding=args.encoding,
             output_format=args.output_format,
+            learn=args.auto_learn,
         )
         for result in results:
             print(result)
+        if args.auto_learn:
+            if mapping.save():
+                print(f"Updated mapping written to {mapping.source_path}")
+            elif mapping.dirty:
+                # ``mapping.save`` may raise when the mapping is dirty but no
+                # path is available. Re-raise to make the failure explicit.
+                mapping.save()
         return 0
 
     parser.error(f"Unknown command: {args.command}")

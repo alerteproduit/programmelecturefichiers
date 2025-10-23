@@ -27,11 +27,12 @@ def normalize_file(
     mapping: config.ColumnMapping,
     *,
     encoding: str | None = None,
+    learn: bool = False,
 ):
     """Normalize a single file and return a :class:`~pandas.DataFrame`."""
 
     raw_df = loader.load_table(path, encoding=encoding)
-    normalized_df = _normalize_dataframe(raw_df, mapping)
+    normalized_df = _normalize_dataframe(raw_df, mapping, learn=learn)
     return normalized_df
 
 
@@ -42,6 +43,7 @@ def normalize_directory(
     *,
     encoding: str | None = None,
     output_format: str = "csv",
+    learn: bool = False,
 ) -> list[Path]:
     """Normalize all supported files in ``input_dir`` and store the results."""
 
@@ -53,7 +55,9 @@ def normalize_directory(
     results: list[Path] = []
     for file_path in utils.iter_files(str(input_dir), loader.SUPPORTED_EXTENSIONS):
         try:
-            normalized = normalize_file(file_path, mapping, encoding=encoding)
+            normalized = normalize_file(
+                file_path, mapping, encoding=encoding, learn=learn
+            )
         except Exception as exc:  # pragma: no cover - defensive logging
             LOGGER.exception("Failed to normalize %s: %s", file_path, exc)
             raise NormalizationError(str(exc)) from exc
@@ -71,7 +75,7 @@ def normalize_directory(
     return results
 
 
-def _normalize_dataframe(df, mapping: config.ColumnMapping):
+def _normalize_dataframe(df, mapping: config.ColumnMapping, *, learn: bool = False):
     """Return a normalized view of ``df`` according to ``mapping``."""
 
     pd = get_pandas()
@@ -80,6 +84,9 @@ def _normalize_dataframe(df, mapping: config.ColumnMapping):
 
     for spec in mapping.columns:
         used, series = _find_column(df, mapping, spec)
+        if learn:
+            for column in used:
+                mapping.learn(spec, column)
         used_columns.update(used)
         converted = utils.coerce_dtype(series, spec.dtype)
         normalized[spec.name] = converted

@@ -70,3 +70,19 @@ def iter_files(root: str, extensions: Iterable[str]) -> Iterable[str]:
     for path in Path(root).iterdir():
         if path.is_file() and path.suffix.lower() in allowed:
             yield str(path)
+
+
+def unique_preserving_order(values: Iterable[str]) -> list[str]:
+    """Return unique values while keeping their original order."""
+
+    seen: set[str] = set()
+    unique: list[str] = []
+
+    for value in values:
+        canon = canonicalize(value)
+        if canon in seen:
+            continue
+        seen.add(canon)
+        unique.append(value)
+
+    return unique
